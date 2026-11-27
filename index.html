@@ -1054,14 +1054,40 @@
       return `<span class="status-badge st-liq">${st}</span>`;
     }
 
+    function getItemFullLabel(item) {
+      const cat = item.c || '';
+      const sub = item.s || '';
+      const desc = item.d || '';
+      const qual = (item.q && item.q !== 'Estándar') ? ` (${item.q})` : '';
+      let tipo = sub || cat;
+      if (tipo && desc.toLowerCase().includes(tipo.toLowerCase())) {
+        return `${desc}${qual}`;
+      }
+      return tipo ? `*${tipo}* — ${desc}${qual}` : `${desc}${qual}`;
+    }
+
+    function getItemPlainLabel(item) {
+      const cat = item.c || '';
+      const sub = item.s || '';
+      const desc = item.d || '';
+      const qual = (item.q && item.q !== 'Estándar') ? ` (${item.q})` : '';
+      let tipo = sub || cat;
+      if (tipo && desc.toLowerCase().includes(tipo.toLowerCase())) {
+        return `${desc}${qual}`;
+      }
+      return tipo ? `${tipo} — ${desc}${qual}` : `${desc}${qual}`;
+    }
+
     function buildDirectWhatsAppLink(item) {
       const v = VENDORS[selectedVendorKey];
+      const tipo = [item.c, item.s].filter(Boolean).join(' / ');
+      const qual = (item.q && item.q !== 'Estándar') ? `\n• *Calidad:* ${item.q}` : '';
       const msg = [
-        `Hola ${v.shortName} (World of Casanova), deseo comprar:`,
-        `• *${item.d}*`,
-        `• Categoría: ${item.c} (${item.m})`,
-        `• Precio lista: ${formatPriceText(item)}`,
-        `• Código: ${item.id}`
+        `Hola *${v.shortName}* (World of Casanova) 👋, deseo comprar:`,
+        `• *Repuesto:* ${getItemPlainLabel(item)}`,
+        `• *Tipo:* ${tipo} [${item.m}]${qual}`,
+        `• *Precio lista:* ${formatPriceText(item)}`,
+        `• *Código:* \`${item.id}\``
       ].join('\n');
       return `https://wa.me/${v.phone}?text=${encodeURIComponent(msg)}`;
     }
@@ -1186,21 +1212,25 @@
       }
       const v = VENDORS[selectedVendorKey];
       const workshop = clientWorkshopInput.value.trim();
-      const { totalUSD, totalNIO, hasConsult } = getCartStats();
+      const { totalUSD, totalNIO, hasConsult, count } = getCartStats();
 
-      const lines = [`Hola *${v.shortName}* (World of Casanova), confirmo el siguiente pedido:`];
-      if (workshop) lines.push(`*Taller / Cliente:* ${workshop}`);
+      const lines = [`Hola *${v.shortName}* (World of Casanova) 👋, confirmo el siguiente pedido:`];
+      if (workshop) lines.push(`🏢 *Taller / Cliente:* ${workshop}`);
       lines.push('');
 
       ids.forEach((id, idx) => {
         const item = CATALOG_MAP[id];
         const qty = cart[id];
-        lines.push(`${idx + 1}. *(${qty}x)* ${item.d} [${item.m}] — ${formatPriceText(item)} (${item.id})`);
+        const tipo = item.s || item.c || 'Repuesto';
+        const qual = (item.q && item.q !== 'Estándar') ? ` | Calidad: ${item.q}` : '';
+        lines.push(`*${idx + 1}.* *(${qty}x)* *${tipo}* — ${item.d}`);
+        lines.push(`     └ ${item.m}${qual} | *${formatPriceText(item)}* (\`${item.id}\`)`);
       });
 
       lines.push('');
-      if (totalUSD > 0) lines.push(`*Total USD:* $${totalUSD.toFixed(2)}`);
-      if (totalNIO > 0) lines.push(`*Total C$:* C$${totalNIO.toFixed(2)}`);
+      lines.push(`📦 *Total artículos:* ${count} ${count === 1 ? 'unidad' : 'unidades'}`);
+      if (totalUSD > 0) lines.push(`💰 *Total USD:* *$${totalUSD.toFixed(2)}*`);
+      if (totalNIO > 0) lines.push(`💰 *Total C$:* *C$${totalNIO.toFixed(2)}*`);
       if (hasConsult) lines.push(`_(Incluye ítems con precio a consultar)_`);
 
       const url = `https://wa.me/${v.phone}?text=${encodeURIComponent(lines.join('\n'))}`;
