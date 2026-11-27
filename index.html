@@ -1062,8 +1062,7 @@
         `• Categoría: ${item.c} (${item.m})`,
         `• Precio lista: ${formatPriceText(item)}`,
         `• Código: ${item.id}`
-      ].join('
-');
+      ].join('\n');
       return `https://wa.me/${v.phone}?text=${encodeURIComponent(msg)}`;
     }
 
@@ -1204,8 +1203,7 @@
       if (totalNIO > 0) lines.push(`*Total C$:* C$${totalNIO.toFixed(2)}`);
       if (hasConsult) lines.push(`_(Incluye ítems con precio a consultar)_`);
 
-      const url = `https://wa.me/${v.phone}?text=${encodeURIComponent(lines.join('
-'))}`;
+      const url = `https://wa.me/${v.phone}?text=${encodeURIComponent(lines.join('\n'))}`;
       window.open(url, '_blank', 'noopener');
     }
 
